@@ -13,6 +13,8 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableCaching
@@ -27,13 +29,18 @@ public class RedisConfig {
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper){
         GenericJacksonJsonRedisSerializer jsonRedisSerializer = new GenericJacksonJsonRedisSerializer(objectMapper);
 
-        RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+        RedisCacheConfiguration cacheDefault = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(10))
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonRedisSerializer));
 
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        cacheConfigurations.put("usuarios", cacheDefault.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("productos", cacheDefault.entryTtl(Duration.ofMinutes(5)));
+
         return RedisCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(cacheConfig)
+                .cacheDefaults(cacheDefault)
+                .withInitialCacheConfigurations(cacheConfigurations)
                 .build();
     }
 

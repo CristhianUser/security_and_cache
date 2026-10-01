@@ -5,6 +5,7 @@ import com.example.api.agregates.requests.SignupRequest;
 import com.example.api.agregates.responses.SigninResponse;
 import com.example.api.entity.Usuario;
 import com.example.api.service.AuthService;
+import com.example.api.service.BarcodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

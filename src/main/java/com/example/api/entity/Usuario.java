@@ -1,5 +1,6 @@
 package com.example.api.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.jspecify.annotations.Nullable;
@@ -39,7 +40,11 @@ public class Usuario implements UserDetails {
     private boolean isAccountNonLocked;
     private boolean isCredentialsNonExpired;
     private boolean isEnabled;
-
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Set<VentaProducto> pedidos = new HashSet<>();
+    @OneToMany(mappedBy = "usuarioMetodo", cascade = CascadeType.ALL)
+    private Set<MetodoPago> metodoPagos = new HashSet<>();
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream().map(rol -> new SimpleGrantedAuthority(rol.getNombreRol()))

@@ -9,7 +9,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # CAMBIO AQUÍ: Se quita el "/data" al final de la ruta del contenedor
       - postgres_data:/var/lib/postgresql
 
   redis:
