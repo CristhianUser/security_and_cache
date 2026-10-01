@@ -1,20 +1,16 @@
 package com.example.api.service.impl;
 import com.example.api.agregates.requests.ItemsRequest;
 import com.example.api.agregates.requests.VentaRequest;
-import com.example.api.entity.DetalleVenta;
-import com.example.api.entity.Usuario;
-import com.example.api.entity.VarianteProducto;
-import com.example.api.entity.VentaProducto;
-import com.example.api.repository.DetalleVentaRepository;
-import com.example.api.repository.UserRepository;
-import com.example.api.repository.VarianteProductoRepository;
-import com.example.api.repository.VentaProductoRepository;
+import com.example.api.entity.*;
+import com.example.api.repository.*;
 import com.example.api.service.RegistroVentaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -25,28 +21,47 @@ public class RegistroVentaServiceImpl implements RegistroVentaService {
     private final DetalleVentaRepository detalleVentaRepository;
     private final VarianteProductoRepository varianteProductoRepository;
     private final UserRepository userRepository;
+    private final MetodoPagoRepository metodoPagoRepository;
+    private final PagoRepository pagoRepository;
 
     @Transactional
     @Override
     public VentaProducto generarVenta(VentaRequest venta) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Usuario usuarioCreador = userRepository.findByEmail(email);
-        VentaProducto ventaProducto = new VentaProducto();
-        ventaProducto.setUsuario(usuarioCreador);
-        Double totalGeneral = 0.00;
-        for (ItemsRequest item: venta.getItems()){
-            VarianteProducto producto = varianteProductoRepository.findByCodigoVariante(item.getCodigoVariante());
-            DetalleVenta detalleVenta = new DetalleVenta();
-            detalleVenta.setVarianteProducto(producto);
-            detalleVenta.setPrecioUnitario(producto.getPrecio());
-            detalleVenta.setProductoCantidad(item.getCantidadVariante());
-            Double subTotal = producto.getPrecio() * item.getCantidadVariante();
-            detalleVenta.setPrecioTotal(subTotal);
-            ventaProducto.vincularDetalle(detalleVenta);
-            totalGeneral+=subTotal;
+        Usuario usuarioLog = userRepository.findByEmail(email);
+        List<MetodoPago> metodosUsuario = metodoPagoRepository.findByPagoUsuario(usuarioLog);
+
+        if(metodosUsuario.size() == 0){
+            throw new RuntimeException("No cuentas con metodos de pago registados");
         }
-        ventaProducto.setVentaTotal(totalGeneral);
-        log.info("Venta generada por : {}, detalles :{}", email, venta.getItems().size());
-        return ventaProductoRepository.save(ventaProducto);
+
+        MetodoPago metodoPagoRelacionado = metodoPagoRepository.findByIdAndByPagoUsuarioIdUser(venta.getMetodoSeleccionado(), usuarioLog.getIdUser());
+
+        if (metodoPagoRelacionado == null){
+            throw new RuntimeException("No te pertenece el metodo seleccionado, realizaste cambios");
+        }else {
+            VentaProducto ventaProducto = new VentaProducto();
+            ventaProducto.setUsuario(usuarioLog);
+            Double totalGeneral = 0.00;
+            for (ItemsRequest item: venta.getItems()){
+                VarianteProducto producto = varianteProductoRepository.findByCodigoVariante(item.getCodigoVariante());
+                DetalleVenta detalleVenta = new DetalleVenta();
+                detalleVenta.setVarianteProducto(producto);
+                detalleVenta.setPrecioUnitario(producto.getPrecio());
+                detalleVenta.setProductoCantidad(item.getCantidadVariante());
+                Double subTotal = producto.getPrecio() * item.getCantidadVariante();
+                detalleVenta.setPrecioTotal(subTotal);
+                ventaProducto.vincularDetalle(detalleVenta);
+                totalGeneral+=subTotal;
+            }
+            ventaProducto.setVentaTotal(totalGeneral);
+            Pago nuevoPago = new Pago();
+            nuevoPago.setMetodo(metodoPagoRelacionado);
+            nuevoPago.setMonto(totalGeneral);
+            pagoRepository.save(nuevoPago);
+            ventaProducto.setPago(nuevoPago);
+            log.info("Venta generada por : {}, detalles :{}", email, venta.getItems().size());
+            return ventaProductoRepository.save(ventaProducto);
+        }
     }
 }

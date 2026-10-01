@@ -26,6 +26,7 @@ public class VentaProducto {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+    private Boolean aprobado;
 
     public void vincularDetalle(DetalleVenta detalleVenta){
         detalleVenta.setVentaProducto(this);

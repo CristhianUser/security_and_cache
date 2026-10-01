@@ -3,6 +3,7 @@ package com.example.api.configuration;
 import com.example.api.entity.*;
 import com.example.api.repository.CategoriaRepository;
 import com.example.api.repository.GeneroRepository;
+import com.example.api.repository.MedioPagoRepository;
 import com.example.api.repository.RolRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -18,6 +19,7 @@ public class Initializer implements CommandLineRunner {
     private final RolRepository rolRepository;
     private final CategoriaRepository categoriaRepository;
     private final GeneroRepository generoRepository;
+    private final MedioPagoRepository medioPagoRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -79,6 +81,27 @@ public class Initializer implements CommandLineRunner {
             generos.add(g3);
             generoRepository.saveAll(generos);
             System.out.println("Generos creados correctamente");
+        }
+
+        if(medioPagoRepository.count() == 0){
+            MedioPago medio1 = new MedioPago();
+            medio1.setNombreMedio(MediosPago.BBVA.name());
+            MedioPago medio2 = new MedioPago();
+            medio2.setNombreMedio(MediosPago.BCP.name());
+            MedioPago medio3 = new MedioPago();
+            medio3.setNombreMedio(MediosPago.INTERBANK.name());
+            MedioPago medio4 = new MedioPago();
+            medio4.setNombreMedio(MediosPago.YAPE.name());
+            MedioPago medio5 = new MedioPago();
+            medio5.setNombreMedio(MediosPago.PLIN.name());
+            Set<MedioPago> mediosPago = new HashSet<>();
+            mediosPago.add(medio1);
+            mediosPago.add(medio2);
+            mediosPago.add(medio3);
+            mediosPago.add(medio4);
+            mediosPago.add(medio5);
+            medioPagoRepository.saveAll(mediosPago);
+            System.out.println("Medios de pago creados correctamente");
         }
 
     }

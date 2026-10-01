@@ -13,7 +13,7 @@ public class MetodoPago {
     private Long id;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario")
-    private Usuario usuarioMetodo;
+    private Usuario pagoUsuario;
     @OneToOne
     @JoinColumn(name = "id_medio")
     private MedioPago medioPago;
